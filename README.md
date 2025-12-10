@@ -6,7 +6,7 @@ A smart Python CLI tool to scan your project’s frontend code for WCAG complian
 - Supports WCAG Versions: 2.0, 2.1, 2.2
 - Skips unnecessary folders & files (node_modules, .git, __pycache__, etc.)
 - AI-powered suggestions for each detected issue
-- Output in table or list format
+- Output in table, list or pdf format
 - Works as standalone CLI or pre-commit hook
 
 ## Detects accessibility problems like:
