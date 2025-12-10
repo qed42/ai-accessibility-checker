@@ -106,6 +106,7 @@ pip install -r requirements.txt
 python-dotenv
 tabulate
 openai>=1.0.0
+reportlab
 ```
 
 ## Usage
@@ -138,7 +139,7 @@ You will be prompted to:
 
 🧩 Which WCAG accessibility level do you want to check? (A / AA / AAA):
 📘 Which WCAG version do you want to check? (2.0 / 2.1 / 2.2): 
-📊 How would you like results? (table / list): 
+📊 How would you like results? (table / list / pdf): 
 📂 Enter the directory path to scan the files (leave blank for current directory): 
 ```
 
