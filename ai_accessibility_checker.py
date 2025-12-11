@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import html
 import argparse
 from pathlib import Path
 from datetime import datetime
@@ -104,10 +105,61 @@ def find_supported_files(directory):
 # AI Analysis
 # -------------------------
 def scan_with_ai(content, file_name, level, version):
+    # Detect file type for template-aware analysis
+    file_ext = Path(file_name).suffix.lower()
+    
+    # Template syntax guidance based on file type
+    template_guidance = ""
+    if file_ext in [".twig", ".html"]:
+        template_guidance = """
+**IMPORTANT - Template Syntax Awareness:**
+This file contains Twig template syntax. Distinguish between these two patterns:
+
+1. **Variables that render COMPLETE HTML elements** (DO NOT FLAG):
+   - Examples: {{ image }}, {{ content.field_image }}, {{ node.field_banner }}, {{ item.image }}
+   - These variables output entire HTML tags (e.g., complete <img> with all attributes)
+   - The backend/CMS handles accessibility attributes automatically
+   - DO NOT flag these as missing alt text - they are handled server-side
+
+2. **Manual HTML tags with dynamic ATTRIBUTES** (FLAG if missing alt):
+   - Examples: <img src="{{ image_url }}">, <img src="{{ path }}">
+   - The template is building the HTML tag structure itself
+   - If the template lacks alt attribute entirely (not even alt="{{ var }}"), FLAG it
+   - If template has alt="{{ variable }}" or alt="{{ item.alt }}", DO NOT flag
+
+**Key Rule**: Only flag accessibility issues when the TEMPLATE STRUCTURE itself is building an incomplete HTML element. Do NOT flag when a variable is outputting a complete, pre-rendered HTML element.
+"""
+    elif file_ext in [".jsx", ".tsx"]:
+        template_guidance = """
+**IMPORTANT - JSX/React Awareness:**
+This file contains JSX/React code. Distinguish between these patterns:
+
+1. **Components/Functions that render COMPLETE accessible elements** (DO NOT FLAG):
+   - Examples: <Image />, <NextImage />, <GatsbyImage />, {renderImage()}, {content.image}
+   - Framework image components (Next.js Image, Gatsby Image, custom Image components)
+   - Functions that return complete JSX with accessibility built-in
+   - DO NOT flag these - they handle accessibility internally
+
+2. **Manual <img> tags with dynamic PROPS** (FLAG if missing alt):
+   - Examples: <img src={imageUrl} />, <img src={props.image} />
+   - The component is building the HTML tag structure itself
+   - If the JSX lacks alt prop entirely (not even alt={variable}), FLAG it
+   - If JSX has alt={variable}, alt={props.alt}, or alt={alt || ''}, DO NOT flag
+   - Exception: alt="" is acceptable for decorative images
+
+3. **Image components WITH explicit props** (Verify alt exists):
+   - Examples: <Image src={url} alt={description} />
+   - Even custom components should have alt prop for accessibility
+   - Flag if custom image component lacks alt prop entirely
+
+**Key Rule**: Only flag when the component/element structure itself lacks accessibility props. Recognize that framework components and render functions handle accessibility internally.
+"""
+    
     prompt = f"""
 You are an expert in web accessibility and WCAG compliance.
 
 The following code includes line numbers.
+{template_guidance}
 
 Scan the code and return **only valid JSON** with this structure:
 [
@@ -126,6 +178,8 @@ Rules:
 - Do not include any extra text outside JSON.
 - Severity should be based on WCAG impact.
 - If no issues found, return [].
+- For template files: Recognize that variables/expressions provide dynamic content at runtime.
+- Only flag issues when the template structure itself is inaccessible, not when dynamic content might fix it.
 
 WCAG Version: {version}
 Accessibility Level: {level}
@@ -277,12 +331,12 @@ def export_to_pdf(all_results, level, version, directory):
             
             table_data.append([
                 str(idx),
-                Paragraph(issue.get('title', 'N/A'), styles['Normal']),
-                Paragraph(issue.get('issue_type', 'N/A'), styles['Normal']),
+                Paragraph(html.escape(issue.get('title', 'N/A')), styles['Normal']),
+                Paragraph(html.escape(issue.get('issue_type', 'N/A')), styles['Normal']),
                 Paragraph(severity_color, styles['Normal']),
                 Paragraph(', '.join(map(str, issue.get('line_numbers', []))), styles['Normal']),
-                Paragraph(issue.get('description', 'N/A'), styles['Normal']),
-                Paragraph(issue.get('suggestion', 'N/A'), styles['Normal'])
+                Paragraph(html.escape(issue.get('description', 'N/A')), styles['Normal']),
+                Paragraph(html.escape(issue.get('suggestion', 'N/A')), styles['Normal'])
             ])
         
         issue_table = Table(table_data, colWidths=[0.3*inch, 1.1*inch, 0.85*inch, 0.7*inch, 0.8*inch, 1.7*inch, 1.7*inch])
