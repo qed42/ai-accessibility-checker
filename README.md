@@ -218,7 +218,7 @@ jobs:
         run: python ai_accessibility_checker.py --level A --version 2.0 --format table --dir ./themes/custom/my_theme
 ```
 ## Demo
-[Demo Video](https://www.linkedin.com/posts/kiran-kadam-96041b63_a11y-accessibility-wcag-activity-7404507268437692416-Asx7?utm_source=share&utm_medium=member_desktop&rcm=ACoAAA1pAJgBv0ZOhUrgPQBBHvmEJ2Y0bAET9p0)
+<a href="https://www.linkedin.com/posts/kiran-kadam-96041b63_a11y-accessibility-wcag-activity-7404507268437692416-Asx7?utm_source=share&utm_medium=member_desktop&rcm=ACoAAA1pAJgBv0ZOhUrgPQBBHvmEJ2Y0bAET9p0" target="_blank" rel="noopener noreferrer">Demo Video</a>
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
